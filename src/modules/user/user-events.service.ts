@@ -9,9 +9,7 @@ export interface AppleBalanceUpdate {
 @Injectable()
 export class UserEventsService {
   private appleBalanceUpdate = new Subject<AppleBalanceUpdate>();
-
   appleBalanceUpdate$ = this.appleBalanceUpdate.asObservable();
-
   emitAppleBalanceUpdate(userId: number, newBalance: number) {
     this.appleBalanceUpdate.next({ userId, newBalance });
   }

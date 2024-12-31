@@ -19,7 +19,6 @@ export class TapGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly userService: UserService,
     private readonly eventsService: UserEventsService,
   ) {
-    // Subscribe to apple balance updates
     this.eventsService.appleBalanceUpdate$.subscribe(
       ({ userId, newBalance }) => {
         this.server.emit('appleBalanceUpdate', { userId, newBalance });

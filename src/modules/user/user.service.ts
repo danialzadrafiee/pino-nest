@@ -14,9 +14,7 @@ export class UserService {
       where: { id: 1 },
       data: { apple_balance: { increment: gained_apples } },
     });
-    
     this.eventsService.emitAppleBalanceUpdate(updatedUser.id, updatedUser.apple_balance);
-    
     return updatedUser;
   }
 }
