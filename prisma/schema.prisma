@@ -3,14 +3,73 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql" // or "postgresql" depending on your database
-  url      = env("DATABASE_URL")
+  provider = "mysql"
+  url      = "mysql://root:WTFIS0124@localhost:3306/pino-nest"
 }
 
+// ======================
+// User Related Models
+// ======================
 
+model User {
+  id                       Int            @id @default(autoincrement())
+  referrer_id              Int?
+  telegram_id              BigInt         @unique
+  telegram_username        String?
+  telegram_firstname       String?
+  telegram_lastname        String?
+  apple_balance            Float          @default(0)
+  crickets_balance         Float          @default(0)
+  direct_referrals_count   Int            @default(0)
+  downline_referrals_count Int            @default(0)
+  apple_per_second         Float          @default(0)
+  apple_per_tap            Float          @default(0)
+  createdAt                DateTime       @default(now()) @map("created_at")
+  updatedAt                DateTime       @default(now()) @map("updated_at")
+  referrals                Referral[]     @relation("referrer")
+  referred                 Referral[]     @relation("referred")
+  userBusinesses           UserBusiness[]
+}
 
+model Referral {
+  id          Int      @id @default(autoincrement())
+  referrer_id Int
+  referred_id Int
+  telegram_id Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  referrer    User     @relation("referrer", fields: [referrer_id], references: [id])
+  referred    User     @relation("referred", fields: [referred_id], references: [id])
+}
 
+// ======================
+// Business Related Models
+// ======================
 
+model Business {
+  id                 Int            @id @default(autoincrement())
+  name               String
+  description        String
+  initial_cost       Float
+  coefficient        Float
+  initial_aps        Float
+  initial_tap_reward Float
+  tiers              Json
+  requirements       Json
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @default(now()) @map("updated_at")
+  userBusinesses     UserBusiness[]
+}
 
+model UserBusiness {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  business_id Int
+  level       Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  user        User     @relation(fields: [user_id], references: [id])
+  business    Business @relation(fields: [business_id], references: [id])
 
-
+  @@unique([user_id, business_id])
+}
