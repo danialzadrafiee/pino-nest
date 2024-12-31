@@ -54,6 +54,7 @@ model Business {
   coefficient        Float
   initial_aps        Float
   initial_tap_reward Float
+  level              Int            @default(0)
   tiers              Json
   requirements       Json
   createdAt          DateTime       @default(now()) @map("created_at")

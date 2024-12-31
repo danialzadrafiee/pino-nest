@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Business` ADD COLUMN `level` INTEGER NOT NULL DEFAULT 0;
