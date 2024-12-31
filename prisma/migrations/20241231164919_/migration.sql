@@ -1,8 +1,8 @@
 -- CreateTable
 CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `referrer_id` INTEGER NULL,
-    `telegram_id` BIGINT NOT NULL,
+    `referrer_id` INTEGER NOT NULL,
+    `telegram_id` INTEGER NOT NULL,
     `telegram_username` VARCHAR(191) NULL,
     `telegram_firstname` VARCHAR(191) NULL,
     `telegram_lastname` VARCHAR(191) NULL,

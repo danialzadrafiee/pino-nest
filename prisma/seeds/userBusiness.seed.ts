@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
-export async function main() {
+export async function seedUserBusiness(prisma: Prisma.TransactionClient) {
   await prisma.userBusiness.upsert({
     where: {
       user_id_business_id: {
@@ -38,11 +37,3 @@ export async function main() {
   });
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

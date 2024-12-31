@@ -13,8 +13,8 @@ datasource db {
 
 model User {
   id                       Int            @id @default(autoincrement())
-  referrer_id              Int?
-  telegram_id              BigInt         @unique
+  referrer_id              Int
+  telegram_id              Int            @unique
   telegram_username        String?
   telegram_firstname       String?
   telegram_lastname        String?
@@ -48,7 +48,7 @@ model Referral {
 
 model Business {
   id                 Int            @id @default(autoincrement())
-  name               String
+  name               String         @unique
   description        String
   initial_cost       Float
   coefficient        Float

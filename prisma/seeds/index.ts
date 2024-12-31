@@ -1,14 +1,17 @@
 import { PrismaClient } from '@prisma/client';
-import { main as seedBusiness } from './business.seed';
-import { main as seedUser } from './user.seed';
-import { main as seedUserBusiness } from './userBusiness.seed';
+import { seedUser } from './user.seed';
+import { seedBusiness } from './business.seed';
+import { seedUserBusiness } from './userBusiness.seed';
 
 const prisma = new PrismaClient();
 
 async function main() {
-    await seedUser();
-    await seedBusiness();
-    await seedUserBusiness();
+    // Use a transaction to ensure data consistency
+    await prisma.$transaction(async (tx) => {
+        await seedUser(tx);
+        await seedBusiness(tx);
+        await seedUserBusiness(tx);
+    });
 }
 
 main()
