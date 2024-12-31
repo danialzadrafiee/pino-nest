@@ -1,11 +1,10 @@
 import { UserService } from './user.service';
-import { UserGateway } from './user.gateway';
 import { UserEventsService } from './user-events.service';
 import { Module } from '@nestjs/common';
 
 @Module({
   imports: [],
-  providers: [UserService, UserGateway, UserEventsService],
-  exports: [UserService],
+  providers: [UserService, UserEventsService],
+  exports: [UserService, UserEventsService],
 })
 export class UserModule {}
