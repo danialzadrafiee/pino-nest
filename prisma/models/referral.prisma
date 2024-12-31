@@ -1,0 +1,10 @@
+model Referral {
+  id          Int      @id @default(autoincrement())
+  referrer_id Int
+  referred_id Int
+  telegram_id Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  referrer    User     @relation("referrer", fields: [referrer_id], references: [id])
+  referred    User     @relation("referred", fields: [referred_id], references: [id])
+}
