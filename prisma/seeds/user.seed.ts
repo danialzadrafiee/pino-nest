@@ -1,8 +1,12 @@
 import { Prisma } from '@prisma/client';
 
 export async function seedUser(prisma: Prisma.TransactionClient) {
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: {
+      telegram_id: 123
+    },
+    update: {},
+    create: {
       referrer_id: 0,
       telegram_id: 123,
       telegram_username: 'demo_user',

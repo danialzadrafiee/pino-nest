@@ -35,11 +35,11 @@ CREATE TABLE `Referral` (
 CREATE TABLE `Business` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
     `initial_cost` DOUBLE NOT NULL,
     `coefficient` DOUBLE NOT NULL,
     `initial_aps` DOUBLE NOT NULL,
     `initial_tap_reward` DOUBLE NOT NULL,
+    `level` INTEGER NOT NULL DEFAULT 0,
     `tiers` JSON NOT NULL,
     `requirements` JSON NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

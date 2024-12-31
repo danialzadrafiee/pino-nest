@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BatchPurchaseDto } from './dto/batch-purchase.dto';
 
 @Injectable()
 export class UserBusinessService {
@@ -7,7 +8,7 @@ export class UserBusinessService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async batchPurchase(batchPurchaseDto) {
+  async batchPurchase(batchPurchaseDto: BatchPurchaseDto) {
     const { business_id, purchase_amount, total_cost } = batchPurchaseDto;
 
     return this.prisma.$transaction(async (prisma) => {

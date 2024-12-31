@@ -2,10 +2,10 @@ import { IsNumber, Min } from 'class-validator';
 
 export class BatchPurchaseDto {
   @IsNumber()
-  businessId: number;
+  business_id: number;
   @IsNumber()
   @Min(1)
-  purchaseAmount: number;
+  purchase_amount: number;
   @IsNumber()
-  totalCost: number;
+  total_cost: number;
 }
