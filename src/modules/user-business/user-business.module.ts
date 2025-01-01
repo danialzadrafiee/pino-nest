@@ -1,11 +1,11 @@
-import { UserBusinessCalculationService } from './reward-engine/user-business-calculation.service';
+import { UserBusinessCalculationService } from './services/user-business-reward-calculation.service';
 import { UserBusinessController } from './user-business.controller';
-import { UserBusinessService } from './user-business.service';
+import { UserBusinessPurchaseService } from './services/user-business-purchase.service';
 import { Module } from '@nestjs/common';
 
 @Module({
   imports: [],
   controllers: [UserBusinessController],
-  providers: [UserBusinessService, UserBusinessCalculationService],
+  providers: [UserBusinessPurchaseService, UserBusinessCalculationService],
 })
 export class UserBusinessModule {}

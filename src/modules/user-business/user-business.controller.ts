@@ -6,15 +6,15 @@ import {
   ValidationPipe,
   Logger,
 } from '@nestjs/common';
-import { UserBusinessService } from './user-business.service';
+import { UserBusinessPurchaseService } from './services/user-business-purchase.service';
 import { BatchPurchaseDto } from './dto/batch-purchase.dto';
-import { UserBusinessCalculationService } from './reward-engine/user-business-calculation.service';
+import { UserBusinessCalculationService } from './services/user-business-reward-calculation.service';
 
 @Controller('user-business')
 export class UserBusinessController {
   constructor(
     private readonly userBusinessCalculationService: UserBusinessCalculationService,
-    private readonly userBusinessService: UserBusinessService,
+    private readonly userBusinessService: UserBusinessPurchaseService,
   ) {}
   @Post('purchase')
   async batchPurchase(
