@@ -12,7 +12,7 @@ export async function seedUserBusiness(prisma: Prisma.TransactionClient) {
     create: {
       user_id: 1,
       business_id: 1,
-      level: 10,
+      level: 1,
     },
   });
 }

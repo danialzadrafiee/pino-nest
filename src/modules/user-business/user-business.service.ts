@@ -8,6 +8,48 @@ export class UserBusinessService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  async create(userId: number, businessId: number) {
+    try {
+      // Check if business exists
+      const business = await this.prisma.business.findUnique({
+        where: { id: businessId },
+      });
+
+      if (!business) {
+        this.logger.error(`Business with ID ${businessId} not found`);
+        throw new Error('Business not found');
+      }
+
+      // Check if user exists
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        this.logger.error(`User with ID ${userId} not found`);
+        throw new Error('User not found');
+      }
+
+      // Create user business relationship
+      return await this.prisma.userBusiness.create({
+        data: {
+          user_id: userId,
+          business_id: businessId,
+          level: 1, // Default starting level
+        },
+        include: {
+          business: true,
+        },
+      });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        this.logger.error(`UserBusiness already exists for user ${userId} and business ${businessId}`);
+        throw new Error('UserBusiness relationship already exists');
+      }
+      throw error;
+    }
+  }
+
   async batchPurchase(batchPurchaseDto: BatchPurchaseDto) {
     const { business_id, purchase_amount, total_cost } = batchPurchaseDto;
 
