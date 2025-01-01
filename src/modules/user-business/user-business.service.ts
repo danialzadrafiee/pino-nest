@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { BatchPurchaseDto } from './dto/batch-purchase.dto';
 
 @Injectable()
@@ -12,7 +12,6 @@ export class UserBusinessService {
     const { business_id, purchase_amount, total_cost } = batchPurchaseDto;
 
     return this.prisma.$transaction(async (prisma) => {
-      // Fetch user and business details
       const user = await prisma.user.findUnique({
         where: { id: 1 },
         select: { apple_balance: true },
@@ -23,19 +22,18 @@ export class UserBusinessService {
         select: { level: true },
       });
 
-      // Validate business existence
       if (!userBusiness) {
         this.logger.error(`Business with ID ${business_id} not found`);
         throw new Error('Business not found');
       }
 
-      // Validate user balance
       if (user.apple_balance < total_cost) {
-        this.logger.error(`Insufficient balance for user ID 1. Required: ${total_cost}, Available: ${user.apple_balance}`);
+        this.logger.error(
+          `Insufficient balance for user ID 1. Required: ${total_cost}, Available: ${user.apple_balance}`,
+        );
         throw new Error('Insufficient balance');
       }
 
-      // Update business level
       const newLevel = (userBusiness.level || 0) + purchase_amount;
       await prisma.userBusiness.update({
         where: { id: business_id },

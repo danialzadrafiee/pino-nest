@@ -1,4 +1,4 @@
-import { UserBusinessModule } from './modules/intractions/user-business/user-business.module';
+import { UserBusinessModule } from './modules/user-business/user-business.module';
 import { TapModule } from './modules/tap/tap.module';
 import { UserModule } from './modules/user/user.module';
 import { Module } from '@nestjs/common';
