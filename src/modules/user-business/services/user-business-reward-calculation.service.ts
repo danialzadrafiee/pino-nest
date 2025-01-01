@@ -9,59 +9,90 @@ import { Tier } from '../types/tier.interface';
 export class UserBusinessCalculationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getGlobalAchievementMultiplier(): Promise<number> {
+  async getGlobalAchievementMultiplier(): Promise<Decimal> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: 1 },
       include: {
         userBusinesses: {
-          include: { business: { select: { tiers: true } } },
+          include: {
+            business: {
+              select: {
+                tiers: true,
+              },
+            },
+          },
         },
       },
     });
-    const globalAchievementMultipliers = user.userBusinesses
-      .reduce((total, { level, business }) => {
-        if (!business?.tiers || !Array.isArray(business.tiers)) return total;
-        return (business.tiers as unknown as Tier[])
-          .filter(
-            (tier) =>
-              tier.achievement.type === 'global' && level >= tier.requiredLevel,
-          )
-          .reduce((sum, tier) => sum.plus(tier.achievement.multiplier), total);
-      }, new Decimal(0))
-      .toNumber();
-    return globalAchievementMultipliers;
+
+    const globalAchievementMultipliers = user.userBusinesses.reduce(
+      (total, { level, business }) => {
+        if (!business?.tiers || !Array.isArray(business.tiers)) {
+          return total;
+        }
+
+        const filteredTiers = (business.tiers as unknown as Tier[]).filter(
+          (tier) => {
+            const isGlobal = tier.achievement.type === 'global';
+            const meetsLevel = level >= tier.requiredLevel;
+            return isGlobal && meetsLevel;
+          },
+        );
+
+        return filteredTiers.reduce((sum, tier) => {
+          Logger.warn(
+            `Adding multiplier: ${tier.achievement.multiplier} to sum: ${sum}`,
+          );
+          return sum.plus(new Decimal(tier.achievement.multiplier));
+        }, total);
+      },
+      new Decimal(0),
+    );
+
+    return globalAchievementMultipliers.plus(1);
   }
 
-  async getGlobalCricketsMuiltiplier() {
+  async getGlobalCricketsMuiltiplier(): Promise<Decimal> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: 1 } });
-    const balance = user.crickets_balance ?? 0;
-    return balance <= 0
-      ? 1
-      : 1 + balance * CRICKET_CONFIG.CRICKET_PROFIT_MULTIPLIER;
+    const balance = new Decimal(user.crickets_balance ?? 0);
+
+    return balance.lte(0)
+      ? new Decimal(1)
+      : new Decimal(1).plus(
+          balance.times(CRICKET_CONFIG.CRICKET_PROFIT_MULTIPLIER),
+        );
   }
 
-  async getGlobalReferralsMuiltiplier(): Promise<number> {
+  async getGlobalReferralsMuiltiplier(): Promise<Decimal> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: 1 } });
-    const user_direct_referrals = user.direct_referrals_count ?? 0;
-    const user_downline_referrals = user.downline_referrals_count ?? 0;
-    const direct_multiplier =
-      user_direct_referrals * REFERRAL_CONFIG.DIRECT_INVITE_PROFIT_MULTIPLIER;
-    const downline_multiplier =
-      user_downline_referrals *
-      REFERRAL_CONFIG.DOWNLINE_INVITE_PROFIT_MULTIPLIER;
-    const total_multiplier = direct_multiplier + downline_multiplier + 1;
+    const userDirectReferrals = new Decimal(user.direct_referrals_count ?? 0);
+    const userDownlineReferrals = new Decimal(
+      user.downline_referrals_count ?? 0,
+    );
 
-    return total_multiplier;
+    const directMultiplier = userDirectReferrals.times(
+      REFERRAL_CONFIG.DIRECT_INVITE_PROFIT_MULTIPLIER,
+    );
+    const downlineMultiplier = userDownlineReferrals.times(
+      REFERRAL_CONFIG.DOWNLINE_INVITE_PROFIT_MULTIPLIER,
+    );
+
+    return directMultiplier.plus(downlineMultiplier).plus(1);
   }
 
-  async getGlobalTotalMultiplier(): Promise<number> {
-    const achievement = await this.getGlobalAchievementMultiplier();
-    const referrals = await this.getGlobalReferralsMuiltiplier();
-    const crickets = await this.getGlobalCricketsMuiltiplier();
-    const total = achievement * crickets * referrals;
+  async getGlobalTotalMultiplier(): Promise<Decimal> {
+    const [achievement, referrals, crickets] = await Promise.all([
+      this.getGlobalAchievementMultiplier(),
+      this.getGlobalReferralsMuiltiplier(),
+      this.getGlobalCricketsMuiltiplier(),
+    ]);
+
+    const total = achievement.times(crickets).times(referrals);
+
     Logger.log(
       `achievement: ${achievement}, crickets: ${crickets}, referrals: ${referrals}, total: ${total}`,
     );
+
     return total;
   }
 
@@ -83,25 +114,34 @@ export class UserBusinessCalculationService {
         },
       },
     });
+
     const businesses = user.userBusinesses.map((userBusiness) => {
       const { level, business } = userBusiness;
       const { initial_aps, initial_tap_reward, tiers } = business;
+
       const tierArray = tiers as Array<{
         requiredLevel: number;
         achievement: { type: string; multiplier: number };
       }>;
+
       const selfMultiplier = tierArray
         .filter(
           (tier) =>
             tier.achievement.type === 'self' && level >= tier.requiredLevel,
         )
         .reduce(
-          (multiplier, tier) => multiplier * tier.achievement.multiplier,
-          1,
+          (multiplier, tier) =>
+            multiplier.times(new Decimal(tier.achievement.multiplier)),
+          new Decimal(1),
         );
-      const currentAps = initial_aps * selfMultiplier * globalMultiplier;
-      const currentTapReward =
-        initial_tap_reward * selfMultiplier * globalMultiplier;
+
+      const currentAps = new Decimal(initial_aps)
+        .times(selfMultiplier)
+        .times(globalMultiplier);
+
+      const currentTapReward = new Decimal(initial_tap_reward)
+        .times(selfMultiplier)
+        .times(globalMultiplier);
 
       return {
         business_id: userBusiness.business_id,
@@ -109,14 +149,21 @@ export class UserBusinessCalculationService {
         currentTapReward,
       };
     });
+
     const totalAps = businesses.reduce(
-      (total, { currentAps }) => total + currentAps,
-      0,
+      (total, { currentAps }) => total.plus(currentAps),
+      new Decimal(0),
     );
+
     const totalTapReward = businesses.reduce(
-      (total, { currentTapReward }) => total + currentTapReward,
-      0,
+      (total, { currentTapReward }) => total.plus(currentTapReward),
+      new Decimal(0),
     );
-    return { businesses, totalAps, totalTapReward };
+
+    return {
+      businesses,
+      totalAps,
+      totalTapReward,
+    };
   }
 }

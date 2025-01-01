@@ -4,7 +4,6 @@ import {
   Body,
   Get,
   ValidationPipe,
-  Logger,
 } from '@nestjs/common';
 import { UserBusinessPurchaseService } from './services/user-business-purchase.service';
 import { BatchPurchaseDto } from './dto/batch-purchase.dto';
