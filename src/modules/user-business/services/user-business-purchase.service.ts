@@ -11,34 +11,13 @@ export class UserBusinessPurchaseService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, businessId: number) {
-    await this.validateEntities(userId, businessId);
-
-    try {
-      return await this.prisma.userBusiness.create({
-        data: {
-          user_id: userId,
-          business_id: businessId,
-          level: this.INITIAL_LEVEL,
-        },
-        include: { business: true },
-      });
-    } catch (error) {
-      throw error;
-    }
-  }
-
   async batchPurchase(dto: BatchPurchaseDto) {
     return this.prisma.$transaction(async (tx) => {
-      const [user] = await Promise.all([
-        this.getUserWithBalance(tx),
-        this.validateBusiness(tx, dto.business_id),
-      ]);
+      const [user] = await Promise.all([this.getUserWithBalance(tx)]);
 
       if (user.apple_balance < dto.total_cost) {
-        throw this.createInsufficientBalanceError(
-          user.apple_balance,
-          dto.total_cost,
+        throw new Error(
+          `Insufficient funds You have ${user.apple_balance} You need ${dto.total_cost}`,
         );
       }
 
@@ -57,37 +36,11 @@ export class UserBusinessPurchaseService {
     });
   }
 
-  private async validateEntities(userId: number, businessId: number) {
-    const [user, business] = await Promise.all([
-      this.prisma.user.findUnique({ where: { id: userId } }),
-      this.prisma.business.findUnique({ where: { id: businessId } }),
-    ]);
-
-    if (!user) throw new Error(`User with ID ${userId} not found`);
-    if (!business) throw new Error(`Business with ID ${businessId} not found`);
-  }
-
   private async getUserWithBalance(tx: Prisma.TransactionClient) {
     return tx.user.findUnique({
       where: { id: this.DEFAULT_USER_ID },
       select: { apple_balance: true },
     });
-  }
-
-  private async validateBusiness(
-    tx: Prisma.TransactionClient,
-    businessId: number,
-  ) {
-    const business = await tx.business.findUnique({
-      where: { id: businessId },
-    });
-
-    if (!business) {
-      this.logger.error(`Business with ID ${businessId} not found`);
-      throw new Error('Business not found');
-    }
-
-    return business;
   }
 
   private async getOrCreateUserBusiness(
@@ -142,12 +95,5 @@ export class UserBusinessPurchaseService {
       where: { id: this.DEFAULT_USER_ID },
       data: { apple_balance: newBalance },
     });
-  }
-
-  private createInsufficientBalanceError(available: number, required: number) {
-    this.logger.error(
-      `Insufficient balance for user ID ${this.DEFAULT_USER_ID}. Required: ${required}, Available: ${available}`,
-    );
-    return new Error('Insufficient balance');
   }
 }
