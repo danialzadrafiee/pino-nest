@@ -7,5 +7,6 @@ import { Module } from '@nestjs/common';
   imports: [],
   controllers: [UserBusinessController],
   providers: [UserBusinessPurchaseService, UserBusinessCalculationService],
+  exports: [UserBusinessCalculationService],
 })
 export class UserBusinessModule {}
